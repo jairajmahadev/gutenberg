@@ -1,7 +1,6 @@
-import os
-import pathlib
 import re
 import tarfile
+from pathlib import Path
 
 import peewee
 from bs4 import BeautifulSoup
@@ -18,7 +17,7 @@ from gutenberg2zim.utils import (
 
 def get_rdf_fpath():
     fname = "rdf-files.tar.bz2"
-    fpath = pathlib.Path(fname).resolve()
+    fpath = Path(fname).resolve()
     return fpath
 
 
@@ -38,7 +37,7 @@ def parse_and_fill(rdf_path, only_books):
     rdf_tarfile = tarfile.open(name=rdf_path, mode="r|bz2")
 
     for rdf_member in rdf_tarfile:
-        rdf_member_path = pathlib.Path(rdf_member.name)
+        rdf_member_path = Path(rdf_member.name)
 
         # skip books outside of requested list
         if (
@@ -71,7 +70,7 @@ def parse_and_process_file(rdf_tarfile, rdf_member):
 
     if parser.license == "None":
         logger.info(f"\tWARN: Unusable book without any information {gid}")
-    elif parser.title == "":
+    elif not parser.title:
         logger.info(f"\tWARN: Unusable book without title {gid}")
     else:
         save_rdf_in_database(parser)
@@ -297,9 +296,10 @@ if __name__ == "__main__":
     nums = [f"{i:0=5d}" for i in range(21000, 40000)]
     for num in nums:
         print(num)  # noqa: T201
-        curd = os.path.dirname(os.path.realpath(__file__))
-        rdf = os.path.join(curd, "..", "rdf-files", num, "pg" + num + ".rdf")
-        if os.path.isfile(rdf):
+        curd = Path(__file__).resolve().parent
+        rdf = curd.parent / "rdf-files" / num / f"pg{num}.rdf"
+
+        if rdf.is_file():
             data = ""
             with open(rdf) as f:
                 data = f.read()
